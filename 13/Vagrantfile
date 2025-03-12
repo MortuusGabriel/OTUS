@@ -1,0 +1,20 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+  
+  config.vm.synced_folder ".", "/home/vagrant/project"
+  config.vbguest.auto_update = false  
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt-get update
+    sudo apt-get install -y nginx mailutils postfix cron
+    
+    sudo systemctl enable cron
+    sudo systemctl start cron
+    
+    sudo touch /var/log/nginx/access.log
+    sudo touch /var/log/nginx/error.log
+    
+    sudo chmod +x /home/vagrant/project/log_analyzer.sh
+    
+    echo "0 * * * * root /home/vagrant/project/log_analyzer.sh" | sudo tee /etc/cron.d/log_analyzer
+  SHELL
+end
