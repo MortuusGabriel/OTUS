@@ -11,7 +11,7 @@ OTUS PRO Homework 13 Bash
 Скрипт должен предотвращать одновременный запуск нескольких копий, до его завершения. В письме должен быть прописан обрабатываемый временной диапазон.
 
 Клонируете проект с Github, набрав команду:
-`apt update -y && apt install git -y ; git clone https://github.com/MortuusGabriel/OTUS.git . && cd OTUS/13`
+```apt update -y && apt install git -y ; git clone https://github.com/MortuusGabriel/OTUS.git . && cd OTUS/13```
 
 Запустите проект командой:
-`vagrant up`
+```vagrant up```
