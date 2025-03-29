@@ -1,0 +1,52 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/centos9s"
+  config.vm.network "private_network", type: "dhcp"
+  config.vbguest.auto_update = false
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    # Установка необходимых пакетов
+    yum install -y wget rpmdevtools rpm-build createrepo yum-utils cmake gcc git nginx
+    
+    # Подготовка окружения для сборки RPM
+    mkdir -p ~/rpm && cd ~/rpm
+    yumdownloader --source nginx
+    rpm -Uvh nginx*.src.rpm
+    yum-builddep -y nginx
+    
+    # Сборка модуля ngx_brotli
+    cd /root
+    git clone --recurse-submodules -j8 https://github.com/google/ngx_brotli
+    cd ngx_brotli/deps/brotli
+    mkdir out && cd out
+    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF ..
+    cmake --build . --config Release -j 2 --target brotlienc
+    
+    # Редактирование spec-файла для добавления модуля ngx_brotli
+    sed -i '/configure /a --add-module=/root/ngx_brotli \\' ~/rpmbuild/SPECS/nginx.spec
+    
+    # Сборка RPM
+    cd ~/rpmbuild/SPECS/
+    rpmbuild -ba nginx.spec -D 'debug_package %{nil}'
+    
+    # Подготовка репозитория
+    mkdir -p /usr/share/nginx/html/repo
+    cp ~/rpmbuild/RPMS/x86_64/*.rpm /usr/share/nginx/html/repo/
+    createrepo /usr/share/nginx/html/repo/
+    
+    # Настройка Nginx для раздачи репозитория
+    echo "index index.html index.htm; autoindex on;" >> /etc/nginx/nginx.conf
+    systemctl enable --now nginx
+    
+    # Создание файла репозитория
+    cat >> /etc/yum.repos.d/custom.repo << EOF
+    [custom]
+    name=Custom Repo
+    baseurl=http://localhost/repo
+    gpgcheck=0
+    enabled=1
+    EOF
+  SHELL
+end
