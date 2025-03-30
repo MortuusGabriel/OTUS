@@ -1,0 +1,34 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: redmine
+      MYSQL_USER: redmine
+      MYSQL_PASSWORD: redmine
+    volumes:
+      - db_data:/var/lib/mysql
+
+  redmine:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    environment:
+      REDMINE_DB_MYSQL: db
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: redmine
+    ports:
+      - "3000:3000"
+    volumes:
+      - redmine_data:/usr/src/redmine/files
+      - redmine_plugins:/usr/src/redmine/plugins
+      - redmine_themes:/usr/src/redmine/public/themes
+
+volumes:
+  db_data:
+  redmine_data:
+  redmine_plugins:
+  redmine_themes:
