@@ -1,6 +1,9 @@
 Запустите команды
+
 `docker build -t dockerhub_login/nginx_custom:1.0 .`
+
 `docker run -d -p 8080:80 --name my_nginx dockerhub_login/nginx_custom:1.0`
+
 `curl http://localhost:8080`
 
 Разница между контейнером и образом
